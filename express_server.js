@@ -41,29 +41,27 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
-})
+});
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 
-app.get("/urls/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id] //something wrong with this.
   res.redirect(longURL);
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { id: req.params.id
-  }
+  const templateVars = { id: req.params.id };
   res.render('urls_register', templateVars);
-}) // maybe need both above and below. figuring it out as i code along.
+});
 
 app.get("/urls/register", (req, res) => {
-  const templateVars = { id: req.params.id
-  }
+  const templateVars = { id: req.params.id };
   res.render('urls_register', templateVars);
-})
+});
 
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
