@@ -45,6 +45,12 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+app.get("/register", (req, res) => {
+  const templateVars = { id: req.params.id
+  }
+  res.render('register', templateVars);
+})
+
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   // Check if the URL is valid
