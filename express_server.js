@@ -31,8 +31,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// app.post()
-
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 })
@@ -49,7 +47,6 @@ app.get("/u/:id", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
-
   // Check if the URL is valid
   try {
     new URL(longURL);
@@ -75,9 +72,14 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+  res.cookie('username', req.body.username);// there was an accidental capital "U" that stopped the code from working.
   res.redirect("/urls");
-})
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('username', req.body.username);
+  res.redirect("/urls")
+});
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL; //edit function post
