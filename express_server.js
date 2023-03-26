@@ -6,6 +6,15 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+const users = {};
+
+const existingUsers = function(email) {
+  for (const user of Object.values(users)) {
+    return user.email === email;
+  }
+  return false;
+};
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -41,7 +50,7 @@ app.get("/u/:id", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = { id: req.params.id
   }
-  res.render('register', templateVars);
+  res.render('urls_register', templateVars);
 })
 
 app.get("/urls", (req, res) => {
@@ -71,6 +80,12 @@ app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
+
+app.post("/register", (req, res) => {
+  const { email, password } = req.body;
+
+  res.redirect("/urls")
+})
 
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);// there was an accidental capital "U" that stopped the code from working.
