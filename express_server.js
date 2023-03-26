@@ -54,7 +54,6 @@ app.post("/urls", (req, res) => {
   } catch {
     return res.status(400).send("Invalid URL");
   }
-
   // Generate a random short URL and add it to the database
   const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = longURL;
@@ -68,10 +67,10 @@ app.post("/urls", (req, res) => {
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
-// app.post("/urls/:id", (req, res) => {
-//   edit urlDatabase[req.params.id];
-//   res.redirect('/urls')
-// });
+app.post("/login", (req, res) => {
+  res.cookie('Username', req.body.username);
+  res.redirect("/urls");
+})
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL; //edit function post
