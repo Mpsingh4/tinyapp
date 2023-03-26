@@ -45,20 +45,6 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-// app.post("/urls", (req, res) => {
-//   const longURL = req.body.longURL;
-//   // Check if URL is valid
-//   const validURL = /^https?:\/\/[\w\-]+(\.[\w\-]+)+[/#?]?.*$/;
-//   if (!validURL.test(longURL)) {
-//     const templateVars = { error: "Invalid URL. Please enter a valid URL starting with http:// or https://." };
-//     res.status(400).render("urls_new", templateVars);
-//   } else {
-//     const shortURL = generateRandomString(6);
-//     urlDatabase[shortURL] = longURL;
-//     res.redirect(`/urls/${shortURL}`);
-//   }
-// });
-
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
 
@@ -80,6 +66,11 @@ app.post("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls')
 });
 
 app.listen(PORT, () => {
