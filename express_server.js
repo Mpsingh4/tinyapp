@@ -23,24 +23,9 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get('/', (req, res) => {
-  const templateVars = {};
-  if (req.session && req.session.username) {
-    templateVars.username = req.session.username;
-  }
-  res.render('index', templateVars);
-});
-
-app.get("/urls", (req, res) => {
-  const templateVars = {
-    username: req.cookies["username"],// updated for login display
-    urls: urlDatabase
-  };
-  res.render("urls_index", templateVars);
-});
-
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+app.get("/urls/new", (req, res) => {  // to catch errors
+  const templateVars = { error: null };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -49,18 +34,22 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id] //something wrong with this.
+  const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { id: req.params.id };
-  res.render('urls_register', templateVars);
-});
+  const templateVars = { id: req.params.id
+  }
+  res.render('register', templateVars);
+})
 
-app.get("/urls/register", (req, res) => {
-  const templateVars = { id: req.params.id };
-  res.render('urls_register', templateVars);
+app.get("/urls", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],// updated for login display
+    urls: urlDatabase
+  };
+  res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -74,15 +63,9 @@ app.post("/urls", (req, res) => {
   // Generate a random short URL and add it to the database
   const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = longURL;
-
   // Redirect to the page that displays the new short URL
   res.redirect(`/urls/${shortURL}`);
 });
-
-// app.get("/urls/new", (req, res) => {  // to catch errors
-//   const templateVars = { error: null };
-//   res.render("urls_new", templateVars);
-// });
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
@@ -116,7 +99,6 @@ app.listen(PORT, () => {
 function generateRandomString(input) {
   let characters = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let stringResult = '';
-
   for (let i = 0; i < input.length; i++) {
    let random = Math.floor(Math.random() * characters.length);
     stringResult += characters[random];
