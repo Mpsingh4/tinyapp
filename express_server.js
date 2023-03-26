@@ -1,8 +1,10 @@
 const express = require('express');
 const app = express();
 const PORT = 8080; // this will be our default
+const cookieParser = require('cookie-parser');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -22,14 +24,14 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    username: req.cookies["username"],// updated for login display
+    urls: urlDatabase
+  };
   res.render("urls_index", templateVars);
-}); // linked to file in views urls_index
+});
 
-// app.get("/urls/new", (req, res) => {  // to catch errors
-//   const templateVars = { error: null };
-//   res.render("urls_new", templateVars);
-// });
+// app.post()
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
@@ -62,13 +64,18 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+// app.get("/urls/new", (req, res) => {  // to catch errors
+//   const templateVars = { error: null };
+//   res.render("urls_new", templateVars);
+// });
+
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('Username', req.body.username);
+  res.cookie('username', req.body.username);
   res.redirect("/urls");
 })
 
