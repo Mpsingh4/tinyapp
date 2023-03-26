@@ -68,6 +68,16 @@ app.post("/urls", (req, res) => {
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
+// app.post("/urls/:id", (req, res) => {
+//   edit urlDatabase[req.params.id];
+//   res.redirect('/urls')
+// });
+
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL; //edit function post
+  res.redirect('/urls')
+})
+
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect('/urls')
