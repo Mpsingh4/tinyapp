@@ -26,6 +26,11 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 }); // linked to file in views urls_index
 
+app.get("/urls/new", (req, res) => {  // to catch errors
+  const templateVars = { error: null };
+  res.render("urls_new", templateVars);
+});
+
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 })
@@ -35,6 +40,43 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// app.get("/u/:id", (req, res) => {
+//   const longURL = urlDatabase[req.params.id]
+//   res.redirect(longURL);
+// });
+
+app.post("/urls", (req, res) => {
+  const longURL = req.body.longURL;
+  // Check if URL is valid
+  const validURL = /^https?:\/\/[\w\-]+(\.[\w\-]+)+[/#?]?.*$/;
+  if (!validURL.test(longURL)) {
+    const templateVars = { error: "Invalid URL. Please enter a valid URL starting with http:// or https://." };
+    res.status(400).render("urls_new", templateVars);
+  } else {
+    const shortURL = generateRandomString(6);
+    urlDatabase[shortURL] = longURL;
+    res.redirect(`/urls/${shortURL}`);
+  }
+});
+
+// app.post("/urls", (req, res) => {
+//   const longURL = req.body.longURL;
+
+//   // Check if the URL is valid
+//   try {
+//     new URL(longURL);
+//   } catch {
+//     return res.status(400).send("Invalid URL");
+//   }
+
+//   // Generate a random short URL and add it to the database
+//   const shortURL = generateRandomString(6);
+//   urlDatabase[shortURL] = longURL;
+
+//   // Redirect to the page that displays the new short URL
+//   res.redirect(`/urls/${shortURL}`);
+// });
+
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   res.send("Ok"); // Respond with 'Ok' (we will replace this)
@@ -43,12 +85,6 @@ app.post("/urls", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}.`);
 });
-
-//--------------------------------------
-
-// app.get("/urls-show", (req, res) => {
-//   res.render("urls_show", templateVars)
-// }) - this isnt the proper syntax
 
 function generateRandomString(input) {
   let characters = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -62,3 +98,7 @@ function generateRandomString(input) {
 }
 
 // console.log(generateRandomString('asdadadasda'));
+
+// app.get("/urls-show", (req, res) => {
+//   res.render("urls_show", templateVars)
+// }) - this isnt the proper syntax
