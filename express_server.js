@@ -23,6 +23,14 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+app.get('/', (req, res) => {
+  const templateVars = {};
+  if (req.session && req.session.username) {
+    templateVars.username = req.session.username;
+  }
+  res.render('index', templateVars);
+});
+
 app.get("/urls", (req, res) => {
   const templateVars = {
     username: req.cookies["username"],// updated for login display
@@ -40,7 +48,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.get("/u/:id", (req, res) => {
+app.get("/urls/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
@@ -48,7 +56,13 @@ app.get("/u/:id", (req, res) => {
 app.get("/register", (req, res) => {
   const templateVars = { id: req.params.id
   }
-  res.render('register', templateVars);
+  res.render('urls_register', templateVars);
+}) // maybe need both above and below. figuring it out as i code along.
+
+app.get("/urls/register", (req, res) => {
+  const templateVars = { id: req.params.id
+  }
+  res.render('urls_register', templateVars);
 })
 
 app.post("/urls", (req, res) => {
