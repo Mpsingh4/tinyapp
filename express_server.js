@@ -6,7 +6,18 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const users = {};
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
 
 const existingUsers = function(email) {
   for (const user of Object.values(users)) {
@@ -48,7 +59,10 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { id: req.params.id
+  const user = users[req.cookies['user_id']];
+  const templateVars = { 
+    id: req.params.id,
+    user: users
   }
   res.render('urls_register', templateVars);
 })
@@ -83,8 +97,25 @@ app.post("/urls", (req, res) => {
 
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
+  const userEmail = req.body.email;
+  const userPass = req.body.password;
 
-  res.redirect("/urls")
+  if (!(userEmail && userPass)) {
+    res.send(400, 'Please use a valid email and password or sign up');
+  };
+
+  if (existingUsers(userEmail)) {
+    res.send(400, 'Account already exists');
+  };
+
+  const newUserId = generateRandomString();
+  users[newUserId] = {
+    id: newUserId,
+    email: userEmail,
+    password: userPass
+  };
+  res.cookie('user_id', newUserId);
+  res.redirect("/urls");
 })
 
 app.post("/login", (req, res) => {
@@ -94,7 +125,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie('username', req.body.username);
-  res.redirect("/urls")
+  res.render("/urls")
 });
 
 app.post("/urls/:id", (req, res) => {
@@ -114,7 +145,7 @@ app.listen(PORT, () => {
 function generateRandomString(input) {
   let characters = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let stringResult = '';
-  for (let i = 0; i < input.length; i++) {
+  for (let i = 0; i < input; i++) {
    let random = Math.floor(Math.random() * characters.length);
     stringResult += characters[random];
   }
