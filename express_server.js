@@ -35,6 +35,8 @@ app.get('/', (req, res) => {
   res.send("Hello to my first server!");
 });
 
+
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
@@ -44,18 +46,34 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {  // to catch errors
-  const templateVars = { error: null };
-  res.render("urls_new", templateVars);
+  const user = users[req.cookies['user_id']];
+  const templateVars = {
+    user: users
+  }
+  res.render('urls_new', templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  res.render("urls_show", templateVars);
+  const user = users[req.cookies['user_id']];
+  const templateVars = { 
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    user: users
+  }
+  res.render('urls_show', templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
+});
+
+app.get("/login", (req, res) => {
+  const user = users[req.cookies['user_id']];
+  const templateVars = {
+    user: users
+  }
+  res.render('login', templateVars);
 });
 
 app.get("/register", (req, res) => {
@@ -65,14 +83,16 @@ app.get("/register", (req, res) => {
     user: users
   }
   res.render('urls_register', templateVars);
-})
+});
 
 app.get("/urls", (req, res) => {
-  const templateVars = {
-    username: req.cookies["username"],// updated for login display
-    urls: urlDatabase
-  };
-  res.render("urls_index", templateVars);
+  const user = users[req.cookies['user_id']];
+  const templateVars = { 
+    id: req.params.id,
+    urls: urlDatabase,
+    user: users
+  }
+  res.render('urls_index', templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -116,16 +136,32 @@ app.post("/register", (req, res) => {
   };
   res.cookie('user_id', newUserId);
   res.redirect("/urls");
-})
+});
+
+const newUserEmail = function(email) {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return users[user];
+    }
+  }
+  return undefined;
+};
 
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);// there was an accidental capital "U" that stopped the code from working.
-  res.redirect("/urls");
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = newUserEmail;
+
+  if (userPass !== password) {
+    res.send(400, "Incorrect Password.")
+  }
+  res.redirect("/login");
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('username', req.body.username);
-  res.render("/urls")
+  res.redirect("/urls")
 });
 
 app.post("/urls/:id", (req, res) => {
