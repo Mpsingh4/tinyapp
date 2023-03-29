@@ -41,8 +41,24 @@ const users = {
 };
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
-module.exports = { generateRandomString, getUserbyEmail, existingUsers, users, urlDatabase };
+function urlsForUser(id) {
+  const items = {};
+  for (let items in urlDatabase) {
+    if (urlDatabase[items].userID === id) {
+      items[url] = urlDatabase[url];
+    }
+  }
+  return items;
+};
+
+module.exports = { generateRandomString, getUserbyEmail, existingUsers, users, urlDatabase, urlsForUser };

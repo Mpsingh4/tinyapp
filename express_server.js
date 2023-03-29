@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // this will be our default
 const cookieParser = require('cookie-parser');
-const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers } = require('./functions');
+const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser } = require('./functions');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -32,8 +32,9 @@ app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies['user_id']];
   const templateVars = { 
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     user: user
+    
   }
   res.render('urls_show', templateVars);
 });
@@ -62,8 +63,8 @@ app.get("/register", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.cookies['user_id']];
   const templateVars = { 
-    urls: urlDatabase,
-    user: user
+    urls: urlsForUser(req.cookies['user_id']),
+    user: user[req.cookies['user_id']]
   }
   res.render('urls_index', templateVars);
 });
