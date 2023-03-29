@@ -123,13 +123,13 @@ app.post("/login", (req, res) => {
   }
 
   res.cookie("user_id", user);
-  res.cookie('username', req.body.username)
+  res.cookie('user_id', req.body.user_id)
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.post("/urls/:id", (req, res) => {
