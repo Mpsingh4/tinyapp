@@ -16,11 +16,12 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <!-- <a class="nav-item nav-link" href="/register">Register</a>  -->
       </div>
     </div>
-    <% if (typeof username !== 'undefined') { %> <!-- finally cleared errors with this + a whole lot of other refactoring -->
+    <% if (typeof user !== 'undefined') { %> <!-- finally cleared errors with this + a whole lot of other refactoring -->
       <li class="nav-item">
-        <p class="nav-link">Logged in as <%= username %></p>
+        <p class="nav-link">Logged in as <%= user.email %></p>
       </li>
       <li class="nav-item">
         <form action="/logout" method="POST">
@@ -39,6 +40,7 @@
               style="width: 300px; margin: 1em"
               />
           <button type="submit" class="btn btn-primary">Login</button>
+          <a class="form-control" href="/register" class="btn btn-secondary">Register</a>
         </div>
       </form>
     <% } %>

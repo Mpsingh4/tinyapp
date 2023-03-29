@@ -21,7 +21,9 @@ const users = {
 
 const existingUsers = function(email) {
   for (const user of Object.values(users)) {
-    return user.email === email;
+    if (user.email === email) {
+      return true;
+    }
   }
   return false;
 };
@@ -35,8 +37,6 @@ app.get('/', (req, res) => {
   res.send("Hello to my first server!");
 });
 
-
-
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
@@ -48,7 +48,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls/new", (req, res) => {  // to catch errors
   const user = users[req.cookies['user_id']];
   const templateVars = {
-    user: users
+    user: user
   }
   res.render('urls_new', templateVars);
 });
@@ -58,7 +58,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    user: users
+    user: user
   }
   res.render('urls_show', templateVars);
 });
@@ -71,7 +71,7 @@ app.get("/u/:id", (req, res) => {
 app.get("/login", (req, res) => {
   const user = users[req.cookies['user_id']];
   const templateVars = {
-    user: users
+    user: user
   }
   res.render('login', templateVars);
 });
@@ -79,18 +79,16 @@ app.get("/login", (req, res) => {
 app.get("/register", (req, res) => {
   const user = users[req.cookies['user_id']];
   const templateVars = { 
-    id: req.params.id,
-    user: users
+    user: user
   }
-  res.render('urls_register', templateVars);
+  res.render('register', templateVars);
 });
 
 app.get("/urls", (req, res) => {
   const user = users[req.cookies['user_id']];
   const templateVars = { 
-    id: req.params.id,
     urls: urlDatabase,
-    user: users
+    user: user
   }
   res.render('urls_index', templateVars);
 });
@@ -100,7 +98,7 @@ app.post("/urls", (req, res) => {
   // Check if the URL is valid
   try {
     new URL(longURL);
-  } catch {
+  } catch (err) {
     return res.status(400).send("Invalid URL");
   }
   // Generate a random short URL and add it to the database
@@ -110,32 +108,28 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
-});
-
 app.post("/register", (req, res) => {
-  const { email, password } = req.body;
   const userEmail = req.body.email;
   const userPass = req.body.password;
 
   if (!(userEmail && userPass)) {
-    res.send(400, 'Please use a valid email and password or sign up');
-  };
+    res.status(400).send('Please use a valid email and password or sign up');
+    return;
+  }
 
   if (existingUsers(userEmail)) {
-    res.send(400, 'Account already exists');
-  };
+    res.status(400).send('Account already exists');
+    return;
+  }
 
-  const newUserId = generateRandomString();
+  const newUserId = generateRandomString(6);
   users[newUserId] = {
     id: newUserId,
     email: userEmail,
     password: userPass
   };
   res.cookie('user_id', newUserId);
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 const newUserEmail = function(email) {
@@ -148,30 +142,37 @@ const newUserEmail = function(email) {
 };
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);// there was an accidental capital "U" that stopped the code from working.
+  res.cookie('user_id', req.body.username); // there was an accidental capital "U" that stopped the code from working.
   const email = req.body.email;
   const password = req.body.password;
-  const user = newUserEmail;
+  const user = newUserEmail(email);
 
-  if (userPass !== password) {
-    res.send(400, "Incorrect Password.")
+  if (!user) {
+    res.status(400).send("User does not exist.");
+    return;
   }
-  res.redirect("/login");
+
+  if (user.password !== password) {
+    res.status(400).send("Incorrect Password.");
+    return;
+  }
+
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username', req.body.username);
-  res.redirect("/urls")
+  res.clearCookie('user_id');
+  res.redirect("/urls");
 });
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL; //edit function post
-  res.redirect('/urls')
-})
+  res.redirect('/urls');
+});
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
-  res.redirect('/urls')
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {
@@ -186,4 +187,4 @@ function generateRandomString(input) {
     stringResult += characters[random];
   }
   return stringResult;
-}
+};
