@@ -2,36 +2,11 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // this will be our default
 const cookieParser = require('cookie-parser');
+const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers } = require('./functions');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
-
-const existingUsers = function(email) {
-  for (const user of Object.values(users)) {
-    if (user.email === email) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
 
 app.get('/', (req, res) => {
   res.send("Hello to my first server!");
@@ -132,15 +107,6 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-const getUserbyEmail = function(email) {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return users[user];
-    }
-  }
-  return undefined;
-};
-
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -179,13 +145,3 @@ app.post("/urls/:id/delete", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}.`);
 });
-
-function generateRandomString(input) {
-  let characters = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let stringResult = '';
-  for (let i = 0; i < input; i++) {
-   let random = Math.floor(Math.random() * characters.length);
-    stringResult += characters[random];
-  }
-  return stringResult;
-};
