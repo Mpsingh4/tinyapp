@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // this will be our default
 const cookieParser = require('cookie-parser');
-const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers } = require('./functions');
+const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser } = require('./functions');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -20,7 +20,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls/new", (req, res) => {  // to catch errors
+app.get("/urls/new", (req, res) => {  //             CREATE NEW
   const user = users[req.cookies['user_id']];
   const templateVars = {
     user: user
@@ -28,8 +28,14 @@ app.get("/urls/new", (req, res) => {  // to catch errors
   res.render('urls_new', templateVars);
 });
 
-app.get("/urls/:id", (req, res) => {
+app.get("/urls/:id", (req, res) => {//              :ID / SHOW
   const user = users[req.cookies['user_id']];
+  const url = urlDatabase[req.params.id];
+
+  if (!user) {
+    return res.status(400).send('Please log in to continue.');
+  }
+
   const templateVars = { 
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
@@ -38,21 +44,27 @@ app.get("/urls/:id", (req, res) => {
   res.render('urls_show', templateVars);
 });
 
-app.get("/u/:id", (req, res) => {
+app.get("/u/:id", (req, res) => {//                    :ID
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
 
-app.get("/login", (req, res) => {
+app.get("/login", (req, res) => {//                  LOGIN
   const user = users[req.cookies['user_id']];
+  if (user) {
+    res.redirect('/urls')
+  }
   const templateVars = {
     user: user
   }
   res.render('login', templateVars);
 });
 
-app.get("/register", (req, res) => {
+app.get("/register", (req, res) => {//                 REGISTER
   const user = users[req.cookies['user_id']];
+  if (user) {
+    res.redirect('/urls')
+  }
   const templateVars = { 
     user: user
   }
@@ -61,6 +73,7 @@ app.get("/register", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = users[req.cookies['user_id']];
+  // const urls = users ? urlsForUser(users) : {}; --------xx
   const templateVars = { 
     urls: urlDatabase,
     user: user,
@@ -69,30 +82,31 @@ app.get("/urls", (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-app.post("/urls", (req, res) => {
+
+// APP POSTS
+// APP POSTS
+// APP POSTS
+// APP POSTS
+// APP POSTS
+// APP POSTS
+
+app.post("/urls", (req, res) => {//                           CREATED
   const longURL = req.body.longURL;
-  // Check if the URL is valid
+  // const user = users[req.cookies['user_id']];
+  // if (!user) {
+  //   return res.status(400).send('Please log in to continue.');
+  // }
   try {
     new URL(longURL);
   } catch (err) {
     return res.status(400).send("Invalid URL");
   }
-  // Generate a random short URL and add it to the database
   const shortURL = generateRandomString(6);
-  // urlDatabase[shortURL] = longURL;
   urlDatabase[shortURL] = { longURL: longURL, userID: req.cookies.user_id };
-  // Redirect to the page that displays the new short URL
   res.redirect(`/urls/${shortURL}`);
 });
 
-// app.post("/urls", (req, res) => {
-//   const longURL = req.body.longURL;
-//   const shortURL = generateRandomString();
-//   urlDatabase[shortURL] = { longURL: longURL };
-//   res.render("urls_show", { longURL: longURL, id: shortURL });
-// }); // new addition ----------------------
-
-app.post("/register", (req, res) => {
+app.post("/register", (req, res) => {//                            REGISTER
   const userEmail = req.body.email;
   const userPass = req.body.password;
 
@@ -116,7 +130,7 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/login", (req, res) => {
+app.post("/login", (req, res) => {//                                    LOGIN
   const email = req.body.email;
   const password = req.body.password;
   const user = getUserbyEmail(email);
@@ -136,8 +150,9 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-app.post("/logout", (req, res) => {
+app.post("/logout", (req, res) => {//                                      LOGOUT
   res.clearCookie('user_id');
+  res.clearCookie('shortURL');
   res.redirect("/login");
 });
 
