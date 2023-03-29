@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // this will be our default
 const cookieParser = require('cookie-parser');
-const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser } = require('./functions');
+const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers } = require('./functions');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -32,9 +32,8 @@ app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies['user_id']];
   const templateVars = { 
     id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL,
+    longURL: urlDatabase[req.params.id],
     user: user
-    
   }
   res.render('urls_show', templateVars);
 });
@@ -63,8 +62,9 @@ app.get("/register", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.cookies['user_id']];
   const templateVars = { 
-    urls: urlsForUser(req.cookies['user_id']),
-    user: user[req.cookies['user_id']]
+    urls: urlDatabase,
+    user: user,
+    urlDatabase: urlDatabase
   }
   res.render('urls_index', templateVars);
 });
@@ -79,10 +79,18 @@ app.post("/urls", (req, res) => {
   }
   // Generate a random short URL and add it to the database
   const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = longURL;
+  // urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = { longURL: longURL, userID: req.cookies.user_id };
   // Redirect to the page that displays the new short URL
   res.redirect(`/urls/${shortURL}`);
 });
+
+// app.post("/urls", (req, res) => {
+//   const longURL = req.body.longURL;
+//   const shortURL = generateRandomString();
+//   urlDatabase[shortURL] = { longURL: longURL };
+//   res.render("urls_show", { longURL: longURL, id: shortURL });
+// }); // new addition ----------------------
 
 app.post("/register", (req, res) => {
   const userEmail = req.body.email;
