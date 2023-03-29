@@ -129,10 +129,10 @@ app.post("/register", (req, res) => {
     password: userPass
   };
   res.cookie('user_id', newUserId);
-  res.redirect("/login");
+  res.redirect("/urls");
 });
 
-const newUserEmail = function(email) {
+const getUserbyEmail = function(email) {
   for (const user in users) {
     if (users[user].email === email) {
       return users[user];
@@ -142,21 +142,22 @@ const newUserEmail = function(email) {
 };
 
 app.post("/login", (req, res) => {
-  res.cookie('user_id', req.body.username); // there was an accidental capital "U" that stopped the code from working.
   const email = req.body.email;
   const password = req.body.password;
-  const user = newUserEmail(email);
+  const user = getUserbyEmail(email);
 
   if (!user) {
-    res.status(400).send("User does not exist.");
+    res.render("login", { message: "User does not exist." });
     return;
   }
 
   if (user.password !== password) {
-    res.status(400).send("Incorrect Password.");
+    res.render("login", { message: "Incorrect password." });
     return;
   }
 
+  res.cookie("user_id", user);
+  res.cookie('username', req.body.username)
   res.redirect("/urls");
 });
 
