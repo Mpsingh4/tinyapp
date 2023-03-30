@@ -2,11 +2,11 @@ const express = require('express');
 const app = express();
 const bcrypt = require('bcryptjs');
 const PORT = 8080; // this will be our default
-const cookieSession = require('cookie-session');
+const cookieParser = require('cookie-parser');
 const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser } = require('./functions');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieSession());
+app.use(cookieParser());
 
 
 app.get('/', (req, res) => {
