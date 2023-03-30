@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const bcrypt = require('bcryptjs');
 const PORT = 8080; // this will be our default
 const cookieParser = require('cookie-parser');
 const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser } = require('./functions');
@@ -106,10 +107,10 @@ app.post("/urls", (req, res) => {//                           CREATED
   res.redirect(`/urls/${shortURL}`);
 });
 
+// let userPass = await bcrypt.hash(req.body.password, 10);
 app.post("/register", (req, res) => {//                            REGISTER
+  const userPass = bcrypt.hashSync(req.body.password, 10);
   const userEmail = req.body.email;
-  const userPass = req.body.password;
-
   if (!(userEmail && userPass)) {
     res.status(400).send('Please use a valid email and password or sign up');
     return;
@@ -135,16 +136,11 @@ app.post("/login", (req, res) => {//                                    LOGIN
   const password = req.body.password;
   const user = getUserbyEmail(email);
 
-  if (!user) {
-    res.render("login", { message: "User does not exist." });
-    return;
+  if (!(user && bcrypt.compareSync(password, user.password))) {
+    const errorMessage = `Wrong email or password for email: ${email}`;
+    return res.status(400).send(errorMessage);
   }
-
-  if (user.password !== password) {
-    res.render("login", { message: "Incorrect password." });
-    return;
-  }
-
+  
   res.cookie("user_id", user);
   res.cookie('user_id', req.body.user_id)
   res.redirect("/urls");
