@@ -111,11 +111,11 @@ app.post("/urls", (req, res) => {//                           CREATED
     return res.status(400).send("Invalid URL");
   }
   const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = { longURL: longURL, userID: req.cookies.user_id };
+  urlDatabase[shortURL] = { longURL: longURL, userID: req.cookies};
   res.redirect(`/urls/${shortURL}`);
 });
 
-// let userPass = await bcrypt.hash(req.body.password, 10);
+
 app.post("/register", (req, res) => {
   const userPass = bcrypt.hashSync(req.body.password, 10);
   const userEmail = req.body.email;
@@ -134,28 +134,6 @@ app.post("/register", (req, res) => {
     res.redirect("/urls");
   }
 });
-// app.post("/register", (req, res) => {//                            REGISTER
-//   const userPass = bcrypt.hashSync(req.body.password, 10);
-//   const userEmail = req.body.email;
-//   if (!(userEmail && userPass)) {
-//     res.status(400).send('Please use a valid email and password or sign up');
-//     return;
-//   }
-
-//   if (existingUsers(userEmail)) {
-//     res.status(400).send('Account already exists');
-//     return;
-//   }
-
-//   const newUserId = generateRandomString(6);
-//   users[newUserId] = {
-//     id: newUserId,
-//     email: userEmail,
-//     password: userPass
-//   };
-//   res.cookie('user_id', newUserId);
-//   res.redirect("/urls");
-// });
 
 app.post("/login", (req, res) => {//                                    LOGIN
   const email = req.body.email;
@@ -167,13 +145,13 @@ app.post("/login", (req, res) => {//                                    LOGIN
     return res.status(400).send(errorMessage);
   }
   
-  req.session.userId = newUserId;
+  // req.session.userId = newUserId;
   res.cookie('user_id', req.body.user_id)
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {//                                      LOGOUT
-  req.session.userId = newUserId;
+  // req.session.userId = newUserId;
   res.clearCookie('user_id');
   res.clearCookie('shortURL');
   res.redirect("/login");
@@ -181,12 +159,12 @@ app.post("/logout", (req, res) => {//                                      LOGOU
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL; //edit function post
-  req.session.userId = newUserId;
+  // req.session.userId = newUserId;
   res.redirect('/urls');
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  req.session.userId = newUserId;
+  // req.session.userId = newUserID;
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
 });
