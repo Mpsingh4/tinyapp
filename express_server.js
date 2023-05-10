@@ -1,14 +1,30 @@
 const express = require('express');
-const app = express();
-const bcrypt = require('bcryptjs');
-const PORT = 8080; // this will be our default
+const bodyParser = require('body-parser');
+const cookieSession = require('cookie-session');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
+const authHelpers = require('./helpers/auth');
+const dataHelpers = require('./helpers/data');
 const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser } = require('./functions');
-app.set("view engine", "ejs");
+
+const app = express();
+const PORT = 8080;
+
+app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
+app.use(authHelpers.authenticateUser); // see auth.js
+app.use(bodyParser.urlencoded({ extended: true }));
 
+app.listen(PORT, () => {
+  console.log(`TinyApp listening on port ${PORT}!`);
+});
 
+// Routes
 app.get('/', (req, res) => {
   res.send("Hello to my first server!");
 });
@@ -21,7 +37,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls/new", (req, res) => {  //             CREATE NEW
+app.get("/urls/new", (req, res) => {  // Renders a page for creating a new short URL
   const user = users[req.cookies['user_id']];
   const templateVars = {
     user: user
@@ -29,7 +45,7 @@ app.get("/urls/new", (req, res) => {  //             CREATE NEW
   res.render('urls_new', templateVars);
 });
 
-app.get("/urls/:id", (req, res) => {//              :ID / SHOW
+app.get("/urls/:id", (req, res) => {// Renders a page showing the details of a short URL
   const user = users[req.cookies['user_id']];
   const url = urlDatabase[req.params.id];
 
@@ -45,12 +61,12 @@ app.get("/urls/:id", (req, res) => {//              :ID / SHOW
   res.render('urls_show', templateVars);
 });
 
-app.get("/u/:id", (req, res) => {//                    :ID
+app.get("/u/:id", (req, res) => {// Redirects to the long URL associated with a given short URL
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
 
-app.get("/login", (req, res) => {//                  LOGIN
+app.get("/login", (req, res) => {// Renders a page for user login
   const user = users[req.cookies['user_id']];
   if (user) {
     res.redirect('/urls')
@@ -61,20 +77,12 @@ app.get("/login", (req, res) => {//                  LOGIN
   res.render('login', templateVars);
 });
 
-app.get("/register", (req, res) => {//                 REGISTER
-  const user = users[req.cookies['user_id']];
-  if (user) {
-    res.redirect('/urls')
-  }
-  const templateVars = { 
-    user: user
-  }
-  res.render('register', templateVars);
+app.get('/register', (req, res) => {// Renders a page for user registration
+  res.render('register');
 });
 
-app.get("/urls", (req, res) => {
+app.get("/urls", (req, res) => { // Renders the list of short URLs for the logged in user
   const user = users[req.cookies['user_id']];
-  // const urls = users ? urlsForUser(users) : {}; --------xx
   const templateVars = { 
     urls: urlDatabase,
     user: user,
@@ -86,10 +94,6 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {//                           CREATED
   const longURL = req.body.longURL;
-  // const user = users[req.cookies['user_id']];
-  // if (!user) {
-  //   return res.status(400).send('Please log in to continue.');
-  // }
   try {
     new URL(longURL);
   } catch (err) {
@@ -101,42 +105,33 @@ app.post("/urls", (req, res) => {//                           CREATED
 });
 
 // let userPass = await bcrypt.hash(req.body.password, 10);
-app.post("/register", (req, res) => {//                            REGISTER
-  const userPass = bcrypt.hashSync(req.body.password, 10);
-  const userEmail = req.body.email;
-  if (!(userEmail && userPass)) {
-    res.status(400).send('Please use a valid email and password or sign up');
-    return;
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    res.status(400).render('register', { message: 'Email and password are required' });
+  } else {
+    const existingUser = await dataHelpers.getUserByEmail(email);
+    if (existingUser) {
+      res.status(400).render('register', { message: 'Email already exists' });
+    } else {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await dataHelpers.createUser(email, hashedPassword);
+      req.session.userId = user._id;
+      res.redirect('/urls');
+    }
   }
-
-  if (existingUsers(userEmail)) {
-    res.status(400).send('Account already exists');
-    return;
-  }
-
-  const newUserId = generateRandomString(6);
-  users[newUserId] = {
-    id: newUserId,
-    email: userEmail,
-    password: userPass
-  };
-  res.cookie('user_id', newUserId);
-  res.redirect("/urls");
 });
 
-app.post("/login", (req, res) => {//                                    LOGIN
-  const email = req.body.email;
-  const password = req.body.password;
-  const user = getUserbyEmail(email);
 
-  if (!(user && bcrypt.compareSync(password, user.password))) {
-    const errorMessage = `Wrong email or password for email: ${email}`;
-    return res.status(400).send(errorMessage);
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await dataHelpers.getUserByEmail(email);
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    res.status(401).render('login', { message: 'Invalid email or password' });
+  } else {
+    req.session.userId = user._id;
+    res.redirect('/urls');
   }
-  
-  res.cookie("user_id", user);
-  res.cookie('user_id', req.body.user_id)
-  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {//                                      LOGOUT
@@ -153,8 +148,4 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}.`);
 });

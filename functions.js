@@ -61,4 +61,16 @@ function urlsForUser(id) {
   return items;
 };
 
-module.exports = { generateRandomString, getUserbyEmail, existingUsers, users, urlDatabase, urlsForUser };
+const authenticateUser = function(email, password) {
+  dataHelpers.getUserByEmail(email).then(user => {
+    if (user && bcrypt.compareSync(password, user.password)) {
+      return user;
+    }
+    return null;
+  }).catch(err => {
+    console.log(err);
+  });
+};
+
+
+module.exports = { generateRandomString, getUserbyEmail, existingUsers, users, urlDatabase, urlsForUser, authenticateUser };
