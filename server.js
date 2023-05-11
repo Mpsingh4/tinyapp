@@ -111,6 +111,30 @@ app.get('/urls/check-url/:url', async (req, res) => {
   }
 });
 
+// app.get("/urls", (req, res) => {                  since i tried to implement this i crashed the whole project, even reverting to older
+//   const user = users[req.session.user_id];
+//   if (!user) {
+//     return res.redirect('/login');
+//   }
+//   const userUrls = urlsForUser(user.id, urlDatabase);
+//   const templateVars = { 
+//     urls: userUrls,
+//     user: user,
+//     urlDatabase: urlDatabase
+//   };
+  
+//   // Add a check to make sure the short URL exists in urlDatabase
+//   for (const shortURL in userUrls) {
+//     if (!urlDatabase[shortURL]) {
+//       delete userUrls[shortURL];
+//     }
+//   }
+  
+//   templateVars.urls = userUrls;
+  
+//   res.render('urls_index', templateVars);
+// });
+
 
 app.post("/urls", (req, res) => {// - -------------------------    POST URLS
   const longURL = req.body.longURL;
