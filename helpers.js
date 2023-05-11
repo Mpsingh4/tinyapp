@@ -33,10 +33,11 @@ const generateRandomString = function() {
   return randomString;
 };
 
-// Hash a given password using bcrypt with a given salt
-const hashPassword = function(password, salt) {
-  return bcrypt.hashSync(password, salt);
+// Hash is a given password using bcrypt
+const hashPassword = function(password) {
+  return bcrypt.hashSync(password, 10);
 };
+
 
 // Export the helper functions
 module.exports = { getUserByEmail, urlsForUser, generateRandomString, hashPassword };
