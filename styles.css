@@ -1,7 +1,19 @@
- .header-section {
+.header-section {
     background-color: #2892a7;
   };
 
-.navbar navbar-expand-md navbar-dark bg-success {
+  .navbar .navbar-expand-md .navbar-dark .bg-success {
     background-color: #2892a7;
+    }
+
+#error-message {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #000;
+  z-index: 9999;
   }

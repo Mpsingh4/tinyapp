@@ -1,13 +1,17 @@
-function generateRandomString(input) {
+const http = require('http');
+
+// Generates a random string of specified length
+function generateRandomString(length) {
   let characters = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let stringResult = '';
-  for (let i = 0; i < input; i++) {
-   let random = Math.floor(Math.random() * characters.length);
+  for (let i = 0; i < length; i++) {
+    let random = Math.floor(Math.random() * characters.length);
     stringResult += characters[random];
   }
   return stringResult;
 };
 
+// Gets user object by email
 const getUserbyEmail = function(email) {
   for (const user in users) {
     if (users[user].email === email) {
@@ -17,7 +21,7 @@ const getUserbyEmail = function(email) {
   return undefined; //return null;
 };
 
-
+// Checks if user exists by email
 const existingUsers = function(email) {
   for (const user of Object.values(users)) {
     if (user.email === email) {
@@ -27,6 +31,7 @@ const existingUsers = function(email) {
   return false;
 };
 
+// Example users and URLs database
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -51,18 +56,20 @@ const urlDatabase = {
   },
 };
 
-function urlsForUser(id) {
-  const items = {};
-  for (let items in urlDatabase) {
-    if (urlDatabase[items].userID === id) {
-      items[url] = urlDatabase[url];
+// Returns URLs for a given user ID
+const urlsForUser = function(id, urlDatabase) {
+  const userUrls = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userUrls[shortURL] = urlDatabase[shortURL];
     }
   }
-  return items;
+  return userUrls;
 };
 
+// Authenticates user using email and password
 const authenticateUser = function(email, password) {
-  dataHelpers.getUserByEmail(email).then(user => {
+  getUserByEmail(email).then(user => {
     if (user && bcrypt.compareSync(password, user.password)) {
       return user;
     }
@@ -72,5 +79,25 @@ const authenticateUser = function(email, password) {
   });
 };
 
+// Checks if a given URL exists
+function checkURL(url) {
+  http.get(url, (res) => {
+    if (res.statusCode === 200) {
+      console.log(`${url} exists`);
+    } else {
+      console.log(`${url} does not exist`);
+    }
+  }).on('error', (err) => {
+    console.log(`${url} does not exist`);
+  });
+}
 
-module.exports = { generateRandomString, getUserbyEmail, existingUsers, users, urlDatabase, urlsForUser, authenticateUser };
+// Exports all the functions
+module.exports = { 
+  generateRandomString, 
+  getUserbyEmail, 
+  existingUsers,  
+  urlsForUser, 
+  authenticateUser, 
+  checkURL 
+};
