@@ -57,15 +57,15 @@ const urlDatabase = {
 };
 
 // Returns URLs for a given user ID
-const urlsForUser = function(id, urlDatabase) {
-  const userUrls = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      userUrls[shortURL] = urlDatabase[shortURL];
-    }
-  }
-  return userUrls;
-};
+// const urlsForUser = function(id, urlDatabase) {
+//   const userUrls = {};
+//   for (const shortURL in urlDatabase) {
+//     if (urlDatabase[shortURL].userID === id) {
+//       userUrls[shortURL] = urlDatabase[shortURL];
+//     }
+//   }
+//   return userUrls;
+// };
 
 // Authenticates user using email and password
 const authenticateUser = function(email, password) {
@@ -97,7 +97,7 @@ module.exports = {
   generateRandomString, 
   getUserbyEmail, 
   existingUsers,  
-  urlsForUser, 
+  // urlsForUser, 
   authenticateUser, 
   checkURL 
 };

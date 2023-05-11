@@ -43,12 +43,12 @@ app.get("/urls/:id", (req, res) => {//              :ID / SHOW
   const url = urlDatabase[req.params.id];
 
   if (!user) {
-    return res.redirect('/login');
+    return res.status(400).send('Please log in to continue.');
   }
 
   const templateVars = { 
     id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL, // Fix here
+    longURL: urlDatabase[req.params.id],
     user: user
   }
   res.render('urls_show', templateVars);
@@ -83,58 +83,56 @@ app.get("/register", (req, res) => {//                 REGISTER
 
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
+
   if (!user) {
     return res.redirect('/login');
   }
-  const userUrls = urlsForUser(user.id, urlDatabase);
+
   const templateVars = { 
-    urls: userUrls,
+    urls: urlDatabase,
     user: user,
     urlDatabase: urlDatabase
-  };
-  
-  // Add a check to make sure the short URL exists in urlDatabase
-  for (const shortURL in userUrls) {
-    if (!urlDatabase[shortURL]) {
-      delete userUrls[shortURL];
-    }
   }
-  
-  templateVars.urls = userUrls;
-  
   res.render('urls_index', templateVars);
 });
 
+app.get('/urls/check-url/:url', async (req, res) => {
+  const url = decodeURIComponent(req.params.url);
 
-app.post("/urls", (req, res) => {//                           CREATED
+  try {
+    const response = await fetch(url);
+    if (response.status === 200) {
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (err) {
+    res.sendStatus(404);
+  }
+});
+
+
+app.post("/urls", (req, res) => {// - -------------------------    POST URLS
   const longURL = req.body.longURL;
+  const user = users[req.session.user_id];
+  if (!user) {
+    return res.status(400).send('Please log in to continue.');
+  }
   try {
     new URL(longURL);
   } catch (err) {
     return res.status(400).send("Invalid URL");
   }
-  const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = { longURL: longURL, userID: req.session.user_id };
-  res.redirect(`/urls/${shortURL}`);
+  checkURL(longURL, function(exists) {
+    if (exists) {
+      const shortURL = generateRandomString(6);
+      urlDatabase[shortURL] = { longURL: longURL, userID: req.session.user_id };
+      res.redirect(`/urls/${shortURL}`);
+    } else {
+      return res.status(400).send("URL does not exist");
+    }
+  });
 });
-
-// app.post("/urls", (req, res) => {       couldnt get http to work reliably.
-//   const longURL = req.body.longURL;
-//   try {
-//     new URL(longURL);
-//   } catch (err) {
-//     return res.status(400).send("Invalid URL");
-//   }
-//   checkURL(longURL, function(exists) {
-//     if (exists) {
-//       const shortURL = generateRandomString(6);
-//       urlDatabase[shortURL] = { longURL: longURL, userID: req.session.user_id };
-//       res.redirect(`/urls/${shortURL}`);
-//     } else {
-//       return res.status(400).send("URL does not exist");
-//     }
-//   });
-// });
 
 // let userPass = await bcrypt.hash(req.body.password, 10);
 app.post("/register", (req, res) => {//                            REGISTER

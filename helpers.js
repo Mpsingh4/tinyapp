@@ -12,16 +12,17 @@ const getUserByEmail = function(email, users) {
 };
 
 // Return an object containing only the urls owned by the user
-const urlsForUser = function(id, urlDatabase) {
-  const userUrls = {};
-  for (let shortUrl in urlDatabase) {
-    const url = urlDatabase[shortUrl];
-    if (url.userId === id) {
-      userUrls[shortUrl] = url;
-    }
-  }
-  return userUrls;
-};
+
+// const urlsForUser = function(id, urlDatabase) {
+//   const userUrls = {};
+//   for (let shortUrl in urlDatabase) {
+//     const url = urlDatabase[shortUrl];
+//     if (url.userId === id) {
+//       userUrls[shortUrl] = url;
+//     }
+//   }
+//   return userUrls;
+// };
 
 // Generate a string of 6 random alphanumeric characters
 const generateRandomString = function() {
@@ -40,4 +41,8 @@ const hashPassword = function(password) {
 
 
 // Export the helper functions
-module.exports = { getUserByEmail, urlsForUser, generateRandomString, hashPassword };
+module.exports = { 
+  getUserByEmail, 
+  generateRandomString, 
+  // urlsForUser,
+  hashPassword };
