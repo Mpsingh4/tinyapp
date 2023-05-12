@@ -3,7 +3,8 @@ const app = express();
 const bcrypt = require('bcryptjs');
 const PORT = 8080; // this will be our default
 const cookieSession = require('cookie-session');
-const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser, checkURL } = require('./functions');
+const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser, checkURL, hashPassword, authenticateUser } = require('./functions');
+const { authenticate } = require('passport');
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
@@ -38,18 +39,25 @@ app.get("/urls/new", (req, res) => {
   res.render('urls_new', templateVars);
 });
 
-app.get("/urls/:id", (req, res) => {//              :ID / SHOW
-  const user = users[req.session.user_id];
-  const url = urlDatabase[req.params.id];
-
-  if (!user) {
+app.get("/urls/:id", (req, res) => {
+  const userID = req.session.user_id;
+  
+  if (!userID) {
     return res.status(400).send('Please log in to continue.');
+  }
+  
+  const user = users[userID];
+  const shortID = req.params.id;
+  const url = urlDatabase[shortID];
+
+  if (url.userID !== userID)  {
+    return res.status(400).send('URL does not belong to you');
   }
 
   const templateVars = { 
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: user
+    id: shortID,
+    longURL: url.longURL,
+    user,
   }
   res.render('urls_show', templateVars);
 });
@@ -76,7 +84,7 @@ app.get("/register", (req, res) => {//                 REGISTER
     res.redirect('/urls')
   }
   const templateVars = { 
-    user: user
+    user: undefined,
   }
   res.render('register', templateVars);
 });
@@ -89,9 +97,8 @@ app.get("/urls", (req, res) => {
   }
 
   const templateVars = { 
-    urls: urlDatabase,
-    user: user,
-    urlDatabase: urlDatabase
+    user,
+    urlDatabase: urlsForUser(user.id),
   }
   res.render('urls_index', templateVars);
 });
@@ -111,72 +118,44 @@ app.get('/urls/check-url/:url', async (req, res) => {
   }
 });
 
-// app.get("/urls", (req, res) => {                  since i tried to implement this i crashed the whole project, even reverting to older
-//   const user = users[req.session.user_id];
-//   if (!user) {
-//     return res.redirect('/login');
-//   }
-//   const userUrls = urlsForUser(user.id, urlDatabase);
-//   const templateVars = { 
-//     urls: userUrls,
-//     user: user,
-//     urlDatabase: urlDatabase
-//   };
-  
-//   // Add a check to make sure the short URL exists in urlDatabase
-//   for (const shortURL in userUrls) {
-//     if (!urlDatabase[shortURL]) {
-//       delete userUrls[shortURL];
-//     }
-//   }
-  
-//   templateVars.urls = userUrls;
-  
-//   res.render('urls_index', templateVars);
-// });
-
 
 app.post("/urls", (req, res) => {// - -------------------------    POST URLS
   const longURL = req.body.longURL;
-  const user = users[req.session.user_id];
-  if (!user) {
+  const userID = req.session.user_id;
+
+  if (!userID) {
     return res.status(400).send('Please log in to continue.');
   }
-  try {
-    new URL(longURL);
-  } catch (err) {
-    return res.status(400).send("Invalid URL");
-  }
-  checkURL(longURL, function(exists) {
-    if (exists) {
-      const shortURL = generateRandomString(6);
-      urlDatabase[shortURL] = { longURL: longURL, userID: req.session.user_id };
-      res.redirect(`/urls/${shortURL}`);
-    } else {
-      return res.status(400).send("URL does not exist");
-    }
-  });
+
+  const shortURL = generateRandomString(6);
+  urlDatabase[shortURL] = { longURL, userID };
+  res.redirect(`/urls/${shortURL}`);
+
+  return res.status(400).send("URL does not exist");
 });
 
 // let userPass = await bcrypt.hash(req.body.password, 10);
 app.post("/register", (req, res) => {//                            REGISTER
-  const userPass = bcrypt.hashSync(req.body.password, 10);
   const userEmail = req.body.email;
-  if (!(userEmail && userPass)) {
+  const userPass = req.body.password;
+
+  if (!userEmail || !userPass) {
     res.status(400).send('Please use a valid email and password or sign up');
     return;
   }
 
-  if (existingUsers(userEmail)) {
+  if (getUserbyEmail(userEmail)) {
     res.status(400).send('Account already exists');
     return;
   }
+
+  const userHashedPass = hashPassword(userPass);
 
   const newUserId = generateRandomString(6);
   users[newUserId] = {
     id: newUserId,
     email: userEmail,
-    password: userPass
+    password: userHashedPass
   };
   req.session.user_id = newUserId;
   res.redirect("/urls");
@@ -185,11 +164,15 @@ app.post("/register", (req, res) => {//                            REGISTER
 app.post("/login", (req, res) => { // ------------------------------ LOGIN
   const email = req.body.email;
   const password = req.body.password;
-  const user = getUserbyEmail(email);
-
-  if (!(user && bcrypt.compareSync(password, user.password))) {
-    const errorMessage = `Wrong email or password for email: ${email}`;
+  
+  if (!email || !password) {
+    const errorMessage = `Enter email or password`;
     return res.status(400).send(errorMessage);
+  }
+  const user = authenticateUser(email, password);
+
+  if (user === 'incorrect password') {
+    return res.status(400).send('incorrect password');
   }
 
   req.session.user_id = user.id; // set the user_id to the user's id
@@ -204,7 +187,9 @@ app.post("/logout", (req, res) => {//                             Logout
 
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL; //edit function post
+  const longURL = req.body.longURL;
+  const userID = req.session.user_id;
+  urlDatabase[req.params.id] = {longURL, userID} //edit function post
   res.redirect('/urls');
 });
 
