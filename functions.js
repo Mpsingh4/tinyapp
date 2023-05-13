@@ -57,7 +57,6 @@ const existingUsers = function(email) {
   return false;
 };
 
-// Example users and URLs database
 
 
 // Returns URLs for a given user ID
@@ -73,14 +72,6 @@ const urlsForUser = function(id) {
 
 // Authenticates user using email and password
 const authenticateUser = function(email, password) {
-  // getUserByEmail(email).then(user => {
-  //   if (user && bcrypt.compareSync(password, user.password)) {
-  //     return user;
-  //   }
-  //   return null;
-  // }).catch(err => {
-  //   console.log(err);
-  // });
   const userFound = getUserbyEmail(email);
 
   if (!userFound) {
@@ -96,19 +87,6 @@ const authenticateUser = function(email, password) {
   return userFound;
 
 };
-
-// Checks if a given URL exists
-// function checkURL(url) {
-//   http.get(url, (res) => {
-//     if (res.statusCode === 200) {
-//       console.log(`${url} exists`);
-//     } else {
-//       console.log(`${url} does not exist`);
-//     }
-//   }).on('error', (err) => {
-//     console.log(`${url} does not exist`);
-//   });
-// }
 
 // Hash is a given password using bcrypt
 const hashPassword = function(password) {

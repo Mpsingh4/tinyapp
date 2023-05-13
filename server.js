@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const bcrypt = require('bcryptjs');
-const PORT = 8080; // this will be our default
+const PORT = 8080; // This PORT will be our default
 const cookieSession = require('cookie-session');
 const { generateRandomString, getUserbyEmail, urlDatabase, users, existingUsers, urlsForUser, checkURL, hashPassword, authenticateUser } = require('./functions');
 const { authenticate } = require('passport');
@@ -13,20 +13,24 @@ app.use(cookieSession({
 }));
 
 
-//routes
+// Get routes:
 
+// Homepage
 app.get('/', (req, res) => {
   res.send("Hello to my first server!");
 });
 
+// Endpoint to retrieve the urlDatabase in JSON format
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// Hello route to test HTML response
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+// Render the new URL page
 app.get("/urls/new", (req, res) => {
   const user = users[req.session.user_id];
   if (!user) {
@@ -39,6 +43,7 @@ app.get("/urls/new", (req, res) => {
   res.render('urls_new', templateVars);
 });
 
+// Show a specific URL details
 app.get("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   
@@ -62,12 +67,14 @@ app.get("/urls/:id", (req, res) => {
   res.render('urls_show', templateVars);
 });
 
-app.get("/u/:id", (req, res) => {//                    :ID
+// Redirect to the long URL
+app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
 
-app.get("/login", (req, res) => {//                  LOGIN
+// Render the login page
+app.get("/login", (req, res) => {
   const user = users[req.session.user_id];
   if (user) {
     res.redirect('/urls')
@@ -78,7 +85,8 @@ app.get("/login", (req, res) => {//                  LOGIN
   res.render('login', templateVars);
 });
 
-app.get("/register", (req, res) => {//                 REGISTER
+// Render the registration page
+app.get("/register", (req, res) => {
   const user = users[req.session.user_id];
   if (user) {
     res.redirect('/urls')
@@ -89,6 +97,7 @@ app.get("/register", (req, res) => {//                 REGISTER
   res.render('register', templateVars);
 });
 
+// Render the URLs index page
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
 
@@ -103,6 +112,7 @@ app.get("/urls", (req, res) => {
   res.render('urls_index', templateVars);
 });
 
+// Check if a URL is valid and exists
 app.get('/urls/check-url/:url', async (req, res) => {
   const url = decodeURIComponent(req.params.url);
 
@@ -118,8 +128,10 @@ app.get('/urls/check-url/:url', async (req, res) => {
   }
 });
 
+// POST Routes
 
-app.post("/urls", (req, res) => {// - -------------------------    POST URLS
+// Handle the creation of a new URL. If the user is logged in, it generates a random short URL.
+app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
 
@@ -134,8 +146,8 @@ app.post("/urls", (req, res) => {// - -------------------------    POST URLS
   return res.status(400).send("URL does not exist");
 });
 
-// let userPass = await bcrypt.hash(req.body.password, 10);
-app.post("/register", (req, res) => {//                            REGISTER
+// Handles the user registration process. If all validations pass, it generates a new user ID and hashes the password.
+app.post("/register", (req, res) => {                          
   const userEmail = req.body.email;
   const userPass = req.body.password;
 
@@ -161,7 +173,8 @@ app.post("/register", (req, res) => {//                            REGISTER
   res.redirect("/urls");
 });
 
-app.post("/login", (req, res) => { // ------------------------------ LOGIN
+// Handles login process. If the credentials are correct, the session is saved under the user's ID.
+app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   
@@ -175,12 +188,12 @@ app.post("/login", (req, res) => { // ------------------------------ LOGIN
     return res.status(400).send('incorrect password');
   }
 
-  req.session.user_id = user.id; // set the user_id to the user's id
+  req.session.user_id = user.id; 
   res.redirect("/urls");
 });
 
-
-app.post("/logout", (req, res) => {//                             Logout
+// Handles the logout process 
+app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/login");
 });
@@ -189,7 +202,7 @@ app.post("/logout", (req, res) => {//                             Logout
 app.post("/urls/:id", (req, res) => {
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
-  urlDatabase[req.params.id] = {longURL, userID} //edit function post
+  urlDatabase[req.params.id] = {longURL, userID}
   res.redirect('/urls');
 });
 
