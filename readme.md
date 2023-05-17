@@ -76,6 +76,32 @@ What things you need to install the software and how to install them:
 - POST /urls/:id/delete
 - Description: Delete a URL
 
+## Screenshots
+
+Create Account:
+![Create Account](docs/create.png)
+
+Login Page:
+![login](docs/login.png)
+
+Logged in Home Page:
+![home](docs/loggedIn.png)
+
+Please Login to Continue Error Warning:
+![error1](docs/PleaseLogIn.png)
+
+Wrong Email or Password Error Warning:
+![error2](docs/WrongEmailOrPassword.png)
+
+Create new TinyURL:
+![createURL](docs/createURL.png)
+
+URL succcesfully created:
+![createurl](docs/urlCreated.png)
+
+Created URL's page:
+![urlshow](docs/showURL.png)
+
 ## Authors
 
 `Lighthouse Labs` - [Lighthouse Lab's GitHub Profile](https://github.com/lighthouse-labs/)

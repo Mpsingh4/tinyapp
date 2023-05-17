@@ -17,7 +17,7 @@ app.use(cookieSession({
 
 // Homepage
 app.get('/', (req, res) => {
-  res.send("Hello to my first server!");
+  res.redirect('/login');
 });
 
 // Endpoint to retrieve the urlDatabase in JSON format
@@ -46,7 +46,7 @@ app.get("/urls/new", (req, res) => {
 // Show a specific URL details
 app.get("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
-  
+
   if (!userID) {
     return res.status(400).send('Please log in to continue.');
   }
@@ -61,17 +61,28 @@ app.get("/urls/:id", (req, res) => {
 
   const templateVars = { 
     id: shortID,
-    longURL: url.longURL,
+    longURL: url.longURL, // Get longURL from url object
     user,
   }
   res.render('urls_show', templateVars);
 });
 
+
 // Redirect to the long URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
-  res.redirect(longURL);
+  const userID = req.session.user_id;
+  if (!userID) {
+    res.redirect('/login');
+    return;
+  }
+  const url = urlDatabase[req.params.id];
+  if (!url) {
+    res.status(404).send('URL not found');
+    return;
+  }
+  res.redirect(url.longURL);
 });
+
 
 // Render the login page
 app.get("/login", (req, res) => {
@@ -133,18 +144,18 @@ app.get('/urls/check-url/:url', async (req, res) => {
 // Handle the creation of a new URL. If the user is logged in, it generates a random short URL.
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
-  const userID = req.session.user_id;
-
-  if (!userID) {
+  const user = users[req.session.user_id];
+  if (!user) {
     return res.status(400).send('Please log in to continue.');
   }
+  if (!longURL) {
+    return res.status(400).send('Long URL cannot be blank.');
+  } else {
+    const shortURL = generateRandomString(6);
+    urlDatabase[shortURL] = { longURL: longURL, userID: req.session.user_id };
+    res.redirect(`/urls/${shortURL}`);}
+  });
 
-  const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = { longURL, userID };
-  res.redirect(`/urls/${shortURL}`);
-
-  return res.status(400).send("URL does not exist");
-});
 
 // Handles the user registration process. If all validations pass, it generates a new user ID and hashes the password.
 app.post("/register", (req, res) => {                          
@@ -202,14 +213,28 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
-  urlDatabase[req.params.id] = {longURL, userID}
-  res.redirect('/urls');
+  if (!longURL) {
+    return res.status(400).send('Long URL cannot be blank.');
+  }
+  if (urlDatabase[req.params.id].userID !== userID) {
+    return res.status(400).send('URL does not belong to you');
+  }
+  urlDatabase[req.params.id].longURL = longURL; // Update the longURL of the existing shortURL
+  res.redirect("/urls");  // Redirect to the URLs list page
 });
 
+
+
+
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect('/urls');
+  const id = req.params.id;
+  if (urlDatabase[id].userID !== req.session.user_id) {
+    return res.status(400).send('URL does not belong to you');
+  }
+  delete urlDatabase[id];
+  res.redirect("/urls");
 });
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}.`);
